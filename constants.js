@@ -25,14 +25,14 @@ const REGION_CONFIG = {
   AU: {
     spreadsheetID: AU_SPREADSHEET_ID,
     gDocURL: 'https://docs.google.com/spreadsheets/d/13tfUY6hU2bvrFT3UbZ8lF3jUk9Sjhkv8NqVKpRoXy-s/',
-    webhookURL: props.getProperty('webhookURLAU'),
+    webhookURL: props.getProperty("Webhook_URL_AU"),
     locations: ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore"],
     timezone: 'Australia/Melbourne'
   },
   NZ: {
     spreadsheetID: NZ_SPREADSHEET_ID,
     gDocURL: 'https://docs.google.com/spreadsheets/d/15clDS6MPlXD49XhXfEOu7xLR-XUoOc8qa27U6djmqIo/',
-    webhookURL: props.getProperty('webhookURLNZ'),
+    webhookURL: '',
     locations: ["Auckland", "Wellington", "Hawkes Bay"],
     timezone: 'Pacific/Auckland'
   },
