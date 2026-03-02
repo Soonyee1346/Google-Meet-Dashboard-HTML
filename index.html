@@ -36,20 +36,24 @@
   <nav class="bg-white border-b border-slate-200 sticky top-0 z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
           <div class="bg-blue-600 p-2 rounded-lg">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-              </path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
             </svg>
           </div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Meet Device Monitor</h1>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Meet Device Dashboard</h1>
+          
+          <select id="macro-region-select" onchange="changeMacroRegion(this.value)" class="ml-4 bg-slate-100 border-none text-sm font-bold text-slate-700 rounded-md py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <option value="AU">AU Region</option>
+            <option value="NZ">NZ Region</option>
+          </select>
         </div>
+        
         <div id="status-indicator" class="flex items-center gap-2 text-sm font-medium text-slate-500">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </span>
           Live Sync Active
         </div>
@@ -58,39 +62,9 @@
   </nav>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-sm font-medium text-slate-500">Total Room Count</p>
-        <p id="total-count" class="text-2xl font-bold text-slate-900">0</p>
+    
+    <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
       </div>
-
-      <button onclick="filterRegion('Melbourne')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Melbourne'">
-        <p class="text-sm font-medium text-slate-500">Melbourne Count</p>
-        <p id="Melbourne-count" class="text-2xl font-bold text-slate-900">0</p>
-      </button>
-
-      <button onclick="filterRegion('Sydney')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Sydney'">
-        <p class="text-sm font-medium text-slate-500">Sydney Count</p>
-        <p id="Sydney-count" class="text-2xl font-bold text-slate-900">0</p>
-      </button>
-
-      <button onclick="filterRegion('Brisbane')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Brisbane'">
-        <p class="text-sm font-medium text-slate-500">Brisbane Count</p>
-        <p id="Brisbane-count" class="text-2xl font-bold text-slate-900">0</p>
-      </button>
-
-      <button onclick="filterRegion('Canberra')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Canberra'">
-        <p class="text-sm font-medium text-slate-500">Canberra Count</p>
-        <p id="Canberra-count" class="text-2xl font-bold text-slate-900">0</p>
-      </button>
-
-      <button onclick="filterRegion('Singapore')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Singapore'">
-        <p class="text-sm font-medium text-slate-500">Singapore Count</p>
-        <p id="Singapore-count" class="text-2xl font-bold text-slate-900">0</p>
-      </button>
-      
-    </div>
 
     <div id="incident-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
@@ -100,113 +74,123 @@
     </div>
   </main>
 
-  <script>
-  // Global state variables
+<script>
+  // ==========================================
+  // 1. GLOBAL STATE & CONFIGURATION
+  // ==========================================
   let globalDashboardData = [];
-  let currentRegionFilter = "All"; 
+  let currentMacroRegion = "AU"; // Default to AU
+  let currentLocationFilter = "All"; // Default to All within AU
 
-  // Initial data fetch
+  // Map your macro-regions to their specific locations
+  const MACRO_REGIONS = {
+    "AU": ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore"],
+    "NZ": ["Auckland", "Wellington", "Hawkes Bay"]
+  };
+
+  // ==========================================
+  // 2. INITIALIZATION
+  // ==========================================
   window.onload = function() {
     google.script.run
       .withSuccessHandler((data) => {
-        globalDashboardData = data; // Save the data locally!
+        globalDashboardData = data;
         renderDashboard(globalDashboardData);
       })
       .withFailureHandler(handleError)
       .getDashboardData();
   };
 
-    window.onload = function() {
-    google.script.run
-      .withSuccessHandler(renderDashboard)
-      .withFailureHandler(handleError)
-      .getDashboardData();
-  };
+  // ==========================================
+  // 3. FILTERING LOGIC
+  // ==========================================
+  function changeMacroRegion(region) {
+    currentMacroRegion = region;
+    currentLocationFilter = "All"; // Reset location filter when switching countries
+    renderDashboard(globalDashboardData);
+  }
 
+  function filterLocation(loc) {
+    // Toggle off if clicking the already active location
+    currentLocationFilter = (currentLocationFilter === loc) ? "All" : loc;
+    renderDashboard(globalDashboardData);
+  }
+
+  // ==========================================
+  // 4. MAIN RENDER FUNCTION
+  // ==========================================
   function renderDashboard(data) {
-    const container = document.getElementById('incident-container');
-    const countEl = document.getElementById('total-count');
+    const incidentContainer = document.getElementById('incident-container');
+    const statsContainer = document.getElementById('stats-container');
     
-    const activeData = data.filter(row => {
-      const isNotResolved = row[7] !== "Resolved";
-      const matchesRegion = currentRegionFilter === "All" || row[1] === currentRegionFilter;
-      
-      return isNotResolved && matchesRegion;
-    });
-
-    if (activeData.length === 0) {
-      container.innerHTML = `
-        <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4 text-green-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-          </div>
-          <h2 class="text-2xl font-bold text-slate-900">All Clear</h2>
-          <p class="text-slate-500 mt-2">No active hardware issues found across your regions.</p>
-        </div>
-      `;
+    if (!data || data.length === 0) {
+      renderStats(0, {}); // Render empty stats
+      showAllClear(incidentContainer);
       return;
     }
 
-    // 2. Group by Room Name
+    const activeData = data.filter(row => row[7] !== "Resolved");
+
+    // --- TIER 1: MACRO REGION FILTER ---
+    const validLocations = MACRO_REGIONS[currentMacroRegion];
+    const macroData = activeData.filter(row => {
+      const loc = row[1] ? row[1].trim() : "";
+      return validLocations.includes(loc);
+    });
+
+    // Calculate Stats for the Top Buttons
+    const allRoomsInMacro = {};
+    macroData.forEach(row => {
+      const [time, location, room] = row;
+      if (!allRoomsInMacro[room]) allRoomsInMacro[room] = { location: location.trim() };
+    });
+
+    const locCounts = {};
+    validLocations.forEach(loc => locCounts[loc] = 0); // Ensure all valid locations start at 0
+    Object.values(allRoomsInMacro).forEach(r => {
+      if (locCounts[r.location] !== undefined) locCounts[r.location]++;
+    });
+
+    // Render the Top Buttons dynamically
+    renderStats(Object.keys(allRoomsInMacro).length, locCounts, validLocations);
+
+    // --- TIER 2: SPECIFIC LOCATION FILTER ---
+    const finalFilteredData = macroData.filter(row => {
+      if (currentLocationFilter === "All") return true;
+      return row[1].trim() === currentLocationFilter;
+    });
+
+    if (finalFilteredData.length === 0) {
+      showAllClear(incidentContainer);
+      return;
+    }
+
+    // --- GROUP INTO CARDS ---
     const rooms = {};
-    activeData.forEach((row, originalIndex) => {
-      const [time, location, room, serial, peripheral, issueID, ignored, resolved] = row;
+    finalFilteredData.forEach((row) => {
+      const [time, location, room, serial, peripheral, issueID, ignored, resolved, notes] = row;
       
       if (!rooms[room]) {
         rooms[room] = {
-          location: location,
+          location: location ? location.trim() : "Unknown",
           serial: serial,
-          time: time, // Captures the oldest time
+          time: time,
           peripherals: [],
-          indices: [], // Keep track of all sheet rows associated with this room
-          isIgnored: ignored === "Ignored"
+          indices: [],
+          isIgnored: ignored === "Ignored",
+          notes: notes || ""
         };
       }
       rooms[room].peripherals.push(peripheral);
-      
-      // IMPORTANT: We must find the index relative to the FULL data array 
-      // to ensure the backend edits the correct spreadsheet row later.
-      const fullDataIndex = data.indexOf(row);
-      rooms[room].indices.push(fullDataIndex);
+      rooms[room].indices.push(globalDashboardData.indexOf(row)); // Keep exact sheet index
     });
 
-    // Update count based on room count
-    countEl.innerText = Object.keys(rooms).length;
-
-    const LOCATIONS = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore", "Auckland", "Wellington", "Hawkes Bay"];
-
-    LOCATIONS.forEach(loc => {
-      let resetEl = document.getElementById(`${loc}-count`);
-      if (resetEl) resetEl.innerText = "0";
-    });
-
-    // 2. Tally and update
-    const regionCounts = {};
-
-    Object.values(rooms).forEach(roomData => {
-      const local = roomData.location || "Unknown";
-      
-      // Add to tally
-      regionCounts[local] = (regionCounts[local] || 0) + 1;
-      
-      // Safely update the DOM
-      let localEl = document.getElementById(`${local}-count`);
-      if (localEl) {
-        localEl.innerText = regionCounts[local];
-      } else {
-        console.warn(`Warning: Missing HTML counter for region: ${local}`);
-      }
-    });
-
-    // 3. Render Cards based on Grouped Rooms
-    container.innerHTML = Object.entries(rooms).map(([roomName, roomData]) => {
-      
-      // Generate badges for all issues in this room
+    // --- RENDER HTML CARDS ---
+    incidentContainer.innerHTML = Object.entries(rooms).map(([roomName, roomData]) => {
       const issueBadges = roomData.peripherals.map(p => 
         `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">${p}</span>`
       ).join('');
 
-      // We turn the array of indices into a JSON string so we can pass it in the onclick function
       const indicesJSON = JSON.stringify(roomData.indices);
 
       return `
@@ -240,27 +224,40 @@
             
             <div class="mt-4 flex items-center text-[11px] text-slate-400">
               <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              First Opened: ${roomData.time}
+              Opened: ${roomData.time}
             </div>
           </div>
+        
+          <div class="px-4 py-3 bg-slate-50 border-t border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Room Notes</label>
+              <div class="flex gap-2">
+                <input type="text" id="note-${roomName.replace(/\s+/g, '-')}" value="${roomData.notes || ''}"
+                       class="w-full text-sm px-3 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                       placeholder="Add a note (e.g., Awaiting replacement part...)">
+                
+                <button onclick='saveNote("${roomName.replace(/\s+/g, '-')}", ${indicesJSON}, this)' 
+                        class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold rounded-md transition-colors whitespace-nowrap">
+                  Save
+                </button>
+              </div>
+            </div>
 
           <div class="flex justify-center gap-4 p-4 bg-slate-50/30 border-t border-slate-100">
             ${roomData.isIgnored 
-              ? `<button 
-                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Unignore", ${indicesJSON})' 
-                  class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm"
-                 >
-                  Unignore
+              ? `<button                   
+                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Unignore", ${indicesJSON}, "${roomData.location}", "${currentMacroRegion}", "${roomName}")' 
+                  class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm">
+                  Ignored
                  </button>` 
               : `<button 
-                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Ignore", ${indicesJSON})' 
+                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Ignore", ${indicesJSON}, "${roomData.location}", "${currentMacroRegion}", "${roomName}")' 
                   class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm"
                  >
                   Ignore Room
                  </button>`
             }
             <button 
-              onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Resolve", ${indicesJSON})' 
+              onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Resolve", ${indicesJSON}, "${roomData.location}", "${currentMacroRegion}", "${roomName}")'
               class="w-full py-2.5 bg-slate-900 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-all transform active:scale-[0.98] shadow-sm"
             >
               Resolve Room
@@ -271,13 +268,59 @@
     }).join('');
   }
 
-  // A unified function to handle both actions for multiple rows
-  function handleAction(actionType, indices) {
+  // ==========================================
+  // 5. HELPER FUNCTIONS
+  // ==========================================
+  
+  // Dynamically renders the top filter buttons based on active Macro Region
+  function renderStats(total, locCounts, validLocations = MACRO_REGIONS[currentMacroRegion]) {
+    const statsContainer = document.getElementById('stats-container');
+    
+    // Helper to determine styles
+    const getStyles = (isActive) => isActive 
+      ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-400' 
+      : 'border-slate-200 bg-white';
+
+    let html = `
+      <button onclick="filterLocation('All')" class="w-full text-left p-4 rounded-xl border ${getStyles(currentLocationFilter === 'All')} shadow-sm hover:shadow-md transition-all focus:outline-none">
+        <p class="text-sm font-medium text-slate-500">Total ${currentMacroRegion} Issues</p>
+        <p class="text-2xl font-bold text-slate-900">${total}</p>
+      </button>
+    `;
+
+    validLocations.forEach(loc => {
+      html += `
+        <button onclick="filterLocation('${loc}')" class="w-full text-left p-4 rounded-xl border ${getStyles(currentLocationFilter === loc)} shadow-sm hover:shadow-md transition-all focus:outline-none">
+          <p class="text-sm font-medium text-slate-500">${loc}</p>
+          <p class="text-2xl font-bold text-slate-900">${locCounts[loc] || 0}</p>
+        </button>
+      `;
+    });
+
+    statsContainer.innerHTML = html;
+  }
+
+  function showAllClear(container) {
+    container.innerHTML = `
+      <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4 text-green-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">All Clear</h2>
+        <p class="text-slate-500 mt-2">No active hardware issues found for this view.</p>
+      </div>
+    `;
+  }
+
+  function handleAction(actionType, indices, location, region, roomName) {
     google.script.run
       .withSuccessHandler(() => {
-         google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
+         google.script.run.withSuccessHandler((newData) => {
+            globalDashboardData = newData;
+            renderDashboard(globalDashboardData);
+         }).getDashboardData();
       })
-      .processRoomAction(actionType, indices);
+      .processRoomAction(actionType, indices, location, region, roomName);
   }
 
   function handleError(err) {
@@ -289,38 +332,39 @@
     `;
   }
 
-  function filterRegion(region) {
-    if (currentRegionFilter === region) {
-      currentRegionFilter = "All";
-    } else {
-      currentRegionFilter = region;
-    }
+  function saveNote(safeRoomId, indices, btnElement) {
+    const noteInput = document.getElementById(`note-${safeRoomId}`);
+    const noteText = noteInput.value;
     
-    // Re-render the cards instantly using the cached data
-    renderDashboard(globalDashboardData);
-    
-    highlightActiveButton();
-  }
+    btnElement.innerText = "Saving...";
+    btnElement.disabled = true;
+    btnElement.classList.replace('bg-blue-100', 'bg-slate-200');
+    btnElement.classList.replace('text-blue-700', 'text-slate-500');
 
-  function highlightActiveButton() {
-    const regions = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore"];
-    
-    regions.forEach(loc => {
-      let btn = document.getElementById(`btn-${loc}`);
-      if (!btn) return;
+    google.script.run
+      .withSuccessHandler(() => {
+         btnElement.innerText = "Saved!";
+         btnElement.classList.replace('bg-slate-200', 'bg-green-100');
+         btnElement.classList.replace('text-slate-500', 'text-green-700');
+         
+         setTimeout(() => { 
+           btnElement.innerText = "Save"; 
+           btnElement.disabled = false;
+           btnElement.classList.replace('bg-green-100', 'bg-blue-100');
+           btnElement.classList.replace('text-green-700', 'text-blue-700');
+         }, 2000);
 
-      if (loc === currentRegionFilter) {
-        // Active Style
-        btn.classList.add('bg-blue-50', 'border-blue-400', 'ring-2', 'ring-blue-400');
-        btn.classList.remove('bg-white', 'border-slate-200');
-      } else {
-        // Inactive Style
-        btn.classList.remove('bg-blue-50', 'border-blue-400', 'ring-2', 'ring-blue-400');
-        btn.classList.add('bg-white', 'border-slate-200');
-      }
-    });
+         google.script.run.withSuccessHandler((newData) => {
+            globalDashboardData = newData;
+         }).getDashboardData();
+      })
+      .withFailureHandler((err) => {
+         console.error("Failed to save note:", err);
+         btnElement.innerText = "Error";
+      })
+      .updateRoomNotes(noteText, indices);
   }
-  </script>
+</script>
 </body>
 
 </html>
