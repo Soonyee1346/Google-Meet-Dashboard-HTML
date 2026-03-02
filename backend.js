@@ -22,20 +22,20 @@ function getDashboardData() {
   });
 }
 
-function resolveLogSheet(room, index) {
+function processRoomAction(actionType, indicesArray) {
   const logSheet = SpreadsheetApp.openById(LOGS_SPREADSHEET_ID).getSheetByName('CurrentOpenIssues');
-
-  index = index + 2;
-
-  logSheet.getRange(index, 8).setValue("Resolved");
   
-}
+  indicesArray.forEach(index => {
+    const sheetRow = index + 2; 
 
-function ignoreIssue(room, index) {
-    const logSheet = SpreadsheetApp.openById(LOGS_SPREADSHEET_ID).getSheetByName('CurrentOpenIssues');
+    if (actionType === "Resolve") {
+      logSheet.getRange(sheetRow, 8).setValue("Resolved");
+    } else if (actionType === "Ignore") {
+      logSheet.getRange(sheetRow, 7).setValue("Ignored");
+    } else if (actionType === "Unignore") {
+      logSheet.getRange(sheetRow, 7).clearContent();
+    }
+  });
 
-  index = index + 2;
-
-  logSheet.getRange(index, 7).setValue("Ignored");
-  
+  SpreadsheetApp.flush();
 }

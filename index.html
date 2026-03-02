@@ -59,10 +59,37 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-sm font-medium text-slate-500">Total Active Issues</p>
+        <p class="text-sm font-medium text-slate-500">Total Room Count</p>
         <p id="total-count" class="text-2xl font-bold text-slate-900">0</p>
       </div>
+
+      <button onclick="filterRegion('Melbourne')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Melbourne'">
+        <p class="text-sm font-medium text-slate-500">Melbourne Count</p>
+        <p id="Melbourne-count" class="text-2xl font-bold text-slate-900">0</p>
+      </button>
+
+      <button onclick="filterRegion('Sydney')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Sydney'">
+        <p class="text-sm font-medium text-slate-500">Sydney Count</p>
+        <p id="Sydney-count" class="text-2xl font-bold text-slate-900">0</p>
+      </button>
+
+      <button onclick="filterRegion('Brisbane')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Brisbane'">
+        <p class="text-sm font-medium text-slate-500">Brisbane Count</p>
+        <p id="Brisbane-count" class="text-2xl font-bold text-slate-900">0</p>
+      </button>
+
+      <button onclick="filterRegion('Canberra')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Canberra'">
+        <p class="text-sm font-medium text-slate-500">Canberra Count</p>
+        <p id="Canberra-count" class="text-2xl font-bold text-slate-900">0</p>
+      </button>
+
+      <button onclick="filterRegion('Singapore')" class="w-full text-left bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all transform active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 id='btn-Singapore'">
+        <p class="text-sm font-medium text-slate-500">Singapore Count</p>
+        <p id="Singapore-count" class="text-2xl font-bold text-slate-900">0</p>
+      </button>
+      
     </div>
 
     <div id="incident-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -74,112 +101,225 @@
   </main>
 
   <script>
-    // Initial data fetch
+  // Global state variables
+  let globalDashboardData = [];
+  let currentRegionFilter = "All"; 
+
+  // Initial data fetch
+  window.onload = function() {
+    google.script.run
+      .withSuccessHandler((data) => {
+        globalDashboardData = data; // Save the data locally!
+        renderDashboard(globalDashboardData);
+      })
+      .withFailureHandler(handleError)
+      .getDashboardData();
+  };
+
     window.onload = function() {
-      google.script.run
-        .withSuccessHandler(renderDashboard)
-        .withFailureHandler(handleError)
-        .getDashboardData();
-    };
+    google.script.run
+      .withSuccessHandler(renderDashboard)
+      .withFailureHandler(handleError)
+      .getDashboardData();
+  };
 
-    function renderDashboard(data) {
-      const container = document.getElementById('incident-container');
-      const countEl = document.getElementById('total-count');
+  function renderDashboard(data) {
+    const container = document.getElementById('incident-container');
+    const countEl = document.getElementById('total-count');
+    
+    const activeData = data.filter(row => {
+      const isNotResolved = row[7] !== "Resolved";
+      const matchesRegion = currentRegionFilter === "All" || row[1] === currentRegionFilter;
       
-      countEl.innerText = data.filter(row => row[7] !== "Resolved").length;
+      return isNotResolved && matchesRegion;
+    });
 
-      if (!data || data.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4 text-green-600">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-900">All Clear</h2>
-            <p class="text-slate-500 mt-2">No active hardware issues found across your regions.</p>
+    if (activeData.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4 text-green-600">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
           </div>
-        `;
-        return;
-      }
+          <h2 class="text-2xl font-bold text-slate-900">All Clear</h2>
+          <p class="text-slate-500 mt-2">No active hardware issues found across your regions.</p>
+        </div>
+      `;
+      return;
+    }
 
-      container.innerHTML = data.filter(row => row[7] !== "Resolved").map((row, index) => {
-        const [time, location, room, serial, peripheral, issueID, ignored, resolved] = row;
-        
-        return `
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full hover:border-blue-300 transition-all group">
-            <div class="bg-slate-50/50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Region</span>
-                <span class="text-xs font-bold text-slate-700 underline decoration-blue-500/30 decoration-2">${location}</span>
+    // 2. Group by Room Name
+    const rooms = {};
+    activeData.forEach((row, originalIndex) => {
+      const [time, location, room, serial, peripheral, issueID, ignored, resolved] = row;
+      
+      if (!rooms[room]) {
+        rooms[room] = {
+          location: location,
+          serial: serial,
+          time: time, // Captures the oldest time
+          peripherals: [],
+          indices: [], // Keep track of all sheet rows associated with this room
+          isIgnored: ignored === "Ignored"
+        };
+      }
+      rooms[room].peripherals.push(peripheral);
+      
+      // IMPORTANT: We must find the index relative to the FULL data array 
+      // to ensure the backend edits the correct spreadsheet row later.
+      const fullDataIndex = data.indexOf(row);
+      rooms[room].indices.push(fullDataIndex);
+    });
+
+    // Update count based on room count
+    countEl.innerText = Object.keys(rooms).length;
+
+    const LOCATIONS = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore", "Auckland", "Wellington", "Hawkes Bay"];
+
+    LOCATIONS.forEach(loc => {
+      let resetEl = document.getElementById(`${loc}-count`);
+      if (resetEl) resetEl.innerText = "0";
+    });
+
+    // 2. Tally and update
+    const regionCounts = {};
+
+    Object.values(rooms).forEach(roomData => {
+      const local = roomData.location || "Unknown";
+      
+      // Add to tally
+      regionCounts[local] = (regionCounts[local] || 0) + 1;
+      
+      // Safely update the DOM
+      let localEl = document.getElementById(`${local}-count`);
+      if (localEl) {
+        localEl.innerText = regionCounts[local];
+      } else {
+        console.warn(`Warning: Missing HTML counter for region: ${local}`);
+      }
+    });
+
+    // 3. Render Cards based on Grouped Rooms
+    container.innerHTML = Object.entries(rooms).map(([roomName, roomData]) => {
+      
+      // Generate badges for all issues in this room
+      const issueBadges = roomData.peripherals.map(p => 
+        `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">${p}</span>`
+      ).join('');
+
+      // We turn the array of indices into a JSON string so we can pass it in the onclick function
+      const indicesJSON = JSON.stringify(roomData.indices);
+
+      return `
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full hover:border-blue-300 transition-all group">
+          <div class="bg-slate-50/50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Region</span>
+              <span class="text-xs font-bold text-slate-700 underline decoration-blue-500/30 decoration-2">${roomData.location}</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded-md">
+              <div class="h-1.5 w-1.5 rounded-full bg-red-500 pulse"></div>
+              <span class="text-[10px] font-bold text-red-600 uppercase tracking-tight">${roomData.peripherals.length} Open Issues</span>
+            </div>
+          </div>
+          
+          <div class="p-5 flex-grow">
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">${roomName}</h3>
+            <p class="text-xs text-slate-400 font-mono mt-1 mb-4">SN: ${roomData.serial || 'N/A'}</p>
+            
+            <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div class="bg-white p-2 rounded shadow-sm mt-1">
+                 <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               </div>
-              <div class="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded-md">
-                <div class="h-1.5 w-1.5 rounded-full bg-red-500 pulse"></div>
-                <span class="text-[10px] font-bold text-red-600 uppercase tracking-tight">Open</span>
+              <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-2">Issues Detected</p>
+                <div class="flex flex-wrap gap-1">
+                  ${issueBadges}
+                </div>
               </div>
             </div>
             
-            <div class="p-5 flex-grow">
-              <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">${room}</h3>
-              <p class="text-xs text-slate-400 font-mono mt-1 mb-4">SN: ${serial || 'N/A'}</p>
-              
-              <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <div class="bg-white p-2 rounded shadow-sm">
-                   <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase leading-none">Issue Detected</p>
-                  <p class="text-sm font-bold text-slate-700 capitalize">${peripheral}</p>
-                </div>
-              </div>
-              
-              <div class="mt-4 flex items-center text-[11px] text-slate-400">
-                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Opened: ${time}
-              </div>
-            </div>
-
-            <div class="flex justify-center gap-4 p-4 bg-slate-50/30 border-t border-slate-100">
-              <button 
-                onclick="this.disabled=true; this.innerText='Processing...'; ignoreIssue('${issueID}', ${index})" 
-                class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm"
-              >
-                ${ignored == "Ignored" ? "Ignored" : "Ignore"}
-              </button>
-              <button 
-                onclick="this.disabled=true; this.innerText='Processing...'; resolveIssue(${index})" 
-                class="w-full py-2.5 bg-slate-900 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-all transform active:scale-[0.98] shadow-sm"
-              >
-                Mark Resolved
-              </button>
+            <div class="mt-4 flex items-center text-[11px] text-slate-400">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              First Opened: ${roomData.time}
             </div>
           </div>
-        `;
-      }).join('');
-    }
 
-    function resolveIssue(room, index) {
-      google.script.run
-        .withSuccessHandler(() => {
-           google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
-        })
-        .resolveLogSheet(index);
-    }
-
-    function ignoreIssue(room, index) {
-      google.script.run
-        .withSuccessHandler(() => {
-           google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
-        })
-        .ignoreIssue(issueID);
-    }
-
-    function handleError(err) {
-      console.error(err);
-      document.getElementById('incident-container').innerHTML = `
-        <div class="col-span-full p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-          Error loading dashboard data. Please check your script permissions.
+          <div class="flex justify-center gap-4 p-4 bg-slate-50/30 border-t border-slate-100">
+            ${roomData.isIgnored 
+              ? `<button 
+                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Unignore", ${indicesJSON})' 
+                  class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm"
+                 >
+                  Unignore
+                 </button>` 
+              : `<button 
+                  onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Ignore", ${indicesJSON})' 
+                  class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-black text-sm transition-all transform active:scale-[0.98] shadow-sm"
+                 >
+                  Ignore Room
+                 </button>`
+            }
+            <button 
+              onclick='this.disabled=true; this.innerText="Processing..."; handleAction("Resolve", ${indicesJSON})' 
+              class="w-full py-2.5 bg-slate-900 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-all transform active:scale-[0.98] shadow-sm"
+            >
+              Resolve Room
+            </button>
+          </div>
         </div>
       `;
+    }).join('');
+  }
+
+  // A unified function to handle both actions for multiple rows
+  function handleAction(actionType, indices) {
+    google.script.run
+      .withSuccessHandler(() => {
+         google.script.run.withSuccessHandler(renderDashboard).getDashboardData();
+      })
+      .processRoomAction(actionType, indices);
+  }
+
+  function handleError(err) {
+    console.error(err);
+    document.getElementById('incident-container').innerHTML = `
+      <div class="col-span-full p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+        Error loading dashboard data. Please check your script permissions.
+      </div>
+    `;
+  }
+
+  function filterRegion(region) {
+    if (currentRegionFilter === region) {
+      currentRegionFilter = "All";
+    } else {
+      currentRegionFilter = region;
     }
+    
+    // Re-render the cards instantly using the cached data
+    renderDashboard(globalDashboardData);
+    
+    highlightActiveButton();
+  }
+
+  function highlightActiveButton() {
+    const regions = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore"];
+    
+    regions.forEach(loc => {
+      let btn = document.getElementById(`btn-${loc}`);
+      if (!btn) return;
+
+      if (loc === currentRegionFilter) {
+        // Active Style
+        btn.classList.add('bg-blue-50', 'border-blue-400', 'ring-2', 'ring-blue-400');
+        btn.classList.remove('bg-white', 'border-slate-200');
+      } else {
+        // Inactive Style
+        btn.classList.remove('bg-blue-50', 'border-blue-400', 'ring-2', 'ring-blue-400');
+        btn.classList.add('bg-white', 'border-slate-200');
+      }
+    });
+  }
   </script>
 </body>
 
