@@ -4,21 +4,12 @@ const props = PropertiesService.getScriptProperties();
 const AU_SPREADSHEET_ID = '13tfUY6hU2bvrFT3UbZ8lF3jUk9Sjhkv8NqVKpRoXy-s';
 const NZ_SPREADSHEET_ID = '15clDS6MPlXD49XhXfEOu7xLR-XUoOc8qa27U6djmqIo';
 const UK_SPREADSHEET_ID = '';
-const US_SPREADSHEET_ID = '';
+const US_SPREADSHEET_ID = '1cMoCJd9-KMcc7GJF5dqOuDBho2QWDO_Kw0aTf6TuT9c';
 const LOGS_SPREADSHEET_ID = '1VhTxdblFpv71-z7LoPe3vynIbJyZ3yrItyK20XzhKMk';
 const TEST_SPREADSHEET_ID = '1-DNxFsrqYtKHu93e2PvC6qLFgqsL8ES3Z0vyn-2M5LA'
 
-// Labels
-  // Create Label for threads that are closed
-  const CLOSED_LABEL_NAME = "MeetAlert-Processed";
-  const CLOSED_LABEL = getOrCreateLabel(CLOSED_LABEL_NAME);
-
-  // Create Label for threads that are opened
-  const OPENED_LABEL_NAME = "MeetAlert-Opened";
-  const OPENED_LABEL = getOrCreateLabel(OPENED_LABEL_NAME);
-
 // All Locations
-const LOCATIONS = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore", "Auckland", "Wellington", "Hawkes Bay"];
+const LOCATIONS = ["Melbourne", "Sydney", "Brisbane", "Canberra", "Singapore", "Auckland", "Wellington", "Hawkes Bay", "San Mateo", "New York", "Denver", "Toronto", "Calgary"];
 
 // Regional Config
 const REGION_CONFIG = {
@@ -45,9 +36,9 @@ const REGION_CONFIG = {
   },
   US: {
     spreadsheetID: US_SPREADSHEET_ID,
-    gDocURL: '',
+    gDocURL: 'https://docs.google.com/spreadsheets/d/1cMoCJd9-KMcc7GJF5dqOuDBho2QWDO_Kw0aTf6TuT9c/',
     webhookURL: '',
-    locations: [''],
+    locations: ["San Mateo", "New York", "Denver", "Toronto", "Calgary"],
     timezone: 'America/Denver'
   }
 }
